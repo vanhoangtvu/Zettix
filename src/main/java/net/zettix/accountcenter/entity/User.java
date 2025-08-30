@@ -1,15 +1,16 @@
 package net.zettix.accountcenter.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import net.zettix.accountcenter.entity.enums.Role;
 
 import java.time.LocalDate;
-@Getter @Setter
+@Getter
+@Setter
 @Entity
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class User {
     @Id @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
@@ -18,7 +19,7 @@ public class User {
     private String email;
     private String fullname;
     @Enumerated(EnumType.STRING)
-    private Role role = Role.USER;
+    private Role role;
     private LocalDate dob;
 
 }

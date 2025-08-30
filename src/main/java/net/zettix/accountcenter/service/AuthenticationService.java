@@ -12,17 +12,20 @@ import net.zettix.accountcenter.dto.request.AuthenticationRequest;
 import net.zettix.accountcenter.dto.request.IntrospectRequest;
 import net.zettix.accountcenter.dto.response.AuthenticationResponse;
 import net.zettix.accountcenter.dto.response.IntrospectResponse;
+import net.zettix.accountcenter.entity.User;
 import net.zettix.accountcenter.entity.enums.Role;
 import net.zettix.accountcenter.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import java.text.ParseException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
+import java.util.StringJoiner;
 
 
 @Service
@@ -64,25 +67,25 @@ public class AuthenticationService {
         if(!authenticate){
             throw new RuntimeException("Unauthenticate");
         }
-        var token =generateToken(request.getUsername());{
+        var token =generateToken(user);{
             return AuthenticationResponse.builder()
                     .token(token)
                     .authenticated(true)
                     .build();
         }
     }
-    private String generateToken(String username){
+    private String generateToken(User user){
         JWSHeader header =new JWSHeader(JWSAlgorithm.HS512);
         JWTClaimsSet claimsSet =new JWTClaimsSet.Builder()
-                .subject(username)
+                .subject(user.getUsername())
                 .issuer("zettix.net")
                 .issueTime(new Date())
                 .expirationTime(new Date(Instant.now().plus(1, ChronoUnit.HOURS).toEpochMilli()))
-                .claim("test",username)
+                .claim("Role",buildScope(user))
                 .build();
+
         Payload payload =new Payload(claimsSet.toJSONObject());
         JWSObject jwsObject =new JWSObject(header,payload);
-
         try {
             jwsObject.sign(new MACSigner(SIGNER_KEY.getBytes()));
             return jwsObject.serialize();
@@ -91,5 +94,8 @@ public class AuthenticationService {
             log.error("can not create token",e);
             throw  new RuntimeException(e);
         }
+    }
+    private String buildScope(User user) {
+        return user.getRole() != null ? user.getRole().name() : "";
     }
 }

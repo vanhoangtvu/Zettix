@@ -1,6 +1,7 @@
 package net.zettix.accountcenter.controller;
 
 import jakarta.validation.Valid;
+import lombok.extern.slf4j.Slf4j;
 import net.zettix.accountcenter.dto.request.UserUpdateRequest;
 import net.zettix.accountcenter.dto.response.ApiResponse;
 import net.zettix.accountcenter.dto.request.UserCreationRequest;
@@ -8,10 +9,12 @@ import net.zettix.accountcenter.dto.response.UserResponse;
 import net.zettix.accountcenter.entity.User;
 import net.zettix.accountcenter.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@Slf4j
 @RestController
 @RequestMapping("/users")
 public class UserController {
@@ -26,9 +29,16 @@ public class UserController {
     }
 
     @GetMapping
-    List<User> getUsers(){
-        return userService.getUser();
+    public List<User> getUsers() {
+        var authentication = SecurityContextHolder.getContext().getAuthentication();
+        log.info("username: {}", authentication.getName());
+        authentication.getAuthorities().forEach(
+                grantedAuthority -> log.info("authority: {}", grantedAuthority.getAuthority())
+        );
+
+        return userService.getUser(); // return ở cuối
     }
+
 
     @GetMapping("/{id}")
     UserResponse getUSer(@PathVariable String id){
